@@ -60,7 +60,7 @@ export default function ScatterPlot({ data }) {
       .on("mousemove", function (event) {
         d3.select(tooltipRef.current)
           .style("left", (event.pageX) + "px")
-          .style("top", (event.pageY - 450) + "px");
+          .style("top", (event.pageY - 1050) + "px");
       })
       .on("mouseout", function () {
         d3.select(tooltipRef.current).style("opacity", 0);
