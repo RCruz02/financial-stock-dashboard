@@ -126,6 +126,15 @@ export default function StackedBarChart({ data }) {
     chartGroup.append('g')
       .call(d3.axisLeft(yScale));
 
+    chartGroup.append('text')
+      .attr('transform', `rotate(-90)`)
+      .attr('x', -innerHeight / 2)
+      .attr('y', -margin.left + 15)
+      .attr('text-anchor', 'middle')
+      .attr('font-size', '14px')
+      .attr('fill', 'black')
+      .text('Count of Trend');
+
     const legend = svg.append("g")
       .attr("transform", `translate(${width - margin.right}, ${margin.top})`);
 
