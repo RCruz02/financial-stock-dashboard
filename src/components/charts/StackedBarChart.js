@@ -1,21 +1,20 @@
 import { useEffect, useRef } from 'react';
+import createTooltip from '../../utils/createTooltip';
 import * as d3 from 'd3';
 
 export default function StackedBarChart({ data }) {
   const svgRef = useRef();
-  const tooltipRef = useRef();
 
   useEffect(() => {
     if (!data || data.length === 0) return;
-
-    console.log("stack", data)
-
+    const tooltip = createTooltip('stackedBarChart-tooltip');
     const svg = d3.select(svgRef.current);
     svg.selectAll('*').remove();
 
-    const width = 800;
-    const height = 600;
-    const margin = { top: 20, right: 60, bottom: 50, left: 60 };
+    const width = 500;
+    const height = 250;
+    const margin = { top: 20, right: 60, bottom: 50, left: 50 };
+
     const innerWidth = width - margin.left - margin.right;
     const innerHeight = height - margin.top - margin.bottom;
 
@@ -76,7 +75,6 @@ export default function StackedBarChart({ data }) {
       .attr('height', d => Math.abs(yScale(d[0]) - yScale(d[1])))
       .attr('width', xScale.bandwidth())
       .on('mouseover', (event, d) => {
-        const tooltip = d3.select(tooltipRef.current);
         const count = d[1] - d[0];
         const sector = d.data.sector;
 
@@ -84,18 +82,18 @@ export default function StackedBarChart({ data }) {
         const trend = parentData.key;
 
         tooltip
-          .style('visibility', 'visible')
+          .style('display', 'block')
           .html(`<strong>Sector:</strong> ${sector}<br/>
                  <strong>Trend:</strong> ${trend}<br/>
                  <strong>Count:</strong> ${count}`);
       })
       .on('mousemove', (event) => {
-        d3.select(tooltipRef.current)
-          .style('top', (event.pageY - 30) + 'px')
-          .style('left', (event.pageX + 20) + 'px');
+        tooltip
+          .style('top', (event.pageY +10) + 'px')
+          .style('left', (event.pageX + 10) + 'px');
       })
       .on('mouseout', () => {
-        d3.select(tooltipRef.current).style('visibility', 'hidden');
+        tooltip.style('display', 'none');
       });
 
 
@@ -122,7 +120,19 @@ export default function StackedBarChart({ data }) {
     chartGroup.append('g')
       .attr('transform', `translate(0, ${innerHeight})`)
       .call(d3.axisBottom(xScale));
-
+    chartGroup.selectAll(".tick text")
+      .each(function () {
+        const self = d3.select(this);
+        const words = self.text().split(" ");
+        self.text(null);
+        words.forEach((word, i) => {
+          self.append("tspan")
+            .text(word)
+            .attr("x", 0)
+            .attr("dy", i === 0 ? "1.2em"  : "1.1em");
+        });
+      }).attr("y",10);
+    
     chartGroup.append('g')
       .call(d3.axisLeft(yScale));
 
@@ -158,19 +168,9 @@ export default function StackedBarChart({ data }) {
   }, [data]);
 
   return (
-    <>
+    <div>
+      <h3 style={{ textAlign: 'center' }}>Market Sentiment Breakdown by Sector</h3>
       <svg ref={svgRef}></svg>
-      <div
-        id="tooltip"
-        ref={tooltipRef}
-        style={{
-          position: "absolute",
-          backgroundColor: "white",
-          border: "1px solid black",
-          padding: "5px",
-          pointerEvents: "none"
-        }}
-      ></div>
-    </>
+    </div>
   );
 }

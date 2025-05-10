@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import createTooltip from '../../utils/createTooltip';
 import * as d3 from 'd3';
 
 export default function LineChart({ data }) {
@@ -6,8 +7,6 @@ export default function LineChart({ data }) {
 
   useEffect(() => {
     if (!data || data.length === 0) return;
-
-    console.log("Filtered data form linechart:",data)
     const dateMap = d3.rollup(
       data,
       v => ({
@@ -22,7 +21,7 @@ export default function LineChart({ data }) {
       ...values,
     })).sort((a, b) => a.date - b.date);
 
-    const margin = { top: 20, right: 30, bottom: 40, left: 50 };
+    const margin = { top: 20, right: 30, bottom: 50, left: 50 };
     const width = 500;
     const height = 250;
 
@@ -71,16 +70,7 @@ export default function LineChart({ data }) {
       .attr("stroke-width", 1.5)
       .attr("d", lineLow);
 
-    svg.append("text")
-      .attr("x", width / 2)
-      .attr("y", margin.top)
-      .attr("text-anchor", "middle")
-      .attr("font-size", "14px")
-      .text("Line Chart - High and Low Over Time");
-
-    // === Tooltip Logic ===
-    const tooltip = d3.select("#tooltip");
-
+    const tooltip = createTooltip('linechart-tooltip');
     svg.append("rect")
       .attr("width", width - margin.left - margin.right)
       .attr("height", height - margin.top - margin.bottom)
@@ -99,8 +89,8 @@ export default function LineChart({ data }) {
 
         tooltip
           .style("display", "block")
-          .style("left", `${x(d.date) + 10}px`)
-          .style("top", `${y(d.avgHigh)}px`)
+          .style("left", `${event.pageX + 10}px`)
+          .style("top", `${event.pageY + 10}px`)
           .html(`
             <strong>${d.date.toISOString().split('T')[0]}</strong><br/>
             High: ${d.avgHigh.toFixed(2)}<br/>
@@ -117,7 +107,6 @@ export default function LineChart({ data }) {
         const d1 = series[i];
         const d = !d0 ? d1 : !d1 ? d0 : hoveredDate - d0.date > d1.date - hoveredDate ? d1 : d0;
       
-        const xPos = x(d.date);
         const yHigh = y(d.avgHigh);
         const yLow = y(d.avgLow);
       
@@ -136,9 +125,9 @@ export default function LineChart({ data }) {
       
           tooltip
             .style("display", "block")
-            .style("left", `${xPos + 12}px`)
-            .style("top", `${isCloserToHigh ? yHigh : yLow}px`)
-            .html(content); // HTML update must happen before transition
+            .style("left", `${event.pageX + 10}px`)
+            .style("top", `${event.pageY + 10}px`)
+            .html(content); 
       
           tooltip
             .transition()
@@ -155,22 +144,9 @@ export default function LineChart({ data }) {
   }, [data]);
 
   return (
-    <div style={{ position: 'relative' }}>
+    <div style={{ width: 500, margin: '0 auto' }}>
+      <h3 style={{ textAlign: 'center' }}>Line Chart - High and Low Over Time</h3>
       <svg ref={svgRef} width={500} height={250}></svg>
-      <div
-        id="tooltip"
-        style={{
-          position: 'absolute',
-          pointerEvents: 'none',
-          background: 'white',
-          padding: '6px 8px',
-          border: '1px solid #ccc',
-          borderRadius: 4,
-          fontSize: '12px',
-          display: 'none',
-          boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-        }}
-      ></div>
     </div>
   );
 }

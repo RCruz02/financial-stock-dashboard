@@ -1,18 +1,19 @@
 import { useEffect, useRef } from 'react';
+import createTooltip from '../../utils/createTooltip';
 import * as d3 from 'd3';
 
 export default function ScatterPlot({ data }) {
   const svgRef = useRef();
-  const tooltipRef = useRef();
 
   useEffect(() => {
     if (!data || data.length === 0) return;
-
-    const width = 1000;
-    const height = 800;
-    const margin = { top: 40, right: 40, bottom: 70, left: 80 };
+    const tooltip = createTooltip('scatterPlot-tooltip')
+    const width = 500;
+    const height = 250;
+    const margin = { top: 20, right: 30, bottom: 50, left: 50 };
     const innerWidth = width - margin.left - margin.right;
     const innerHeight = height - margin.top - margin.bottom;
+
 
     const svg = d3.select(svgRef.current)
       .attr("width", width)
@@ -40,15 +41,14 @@ export default function ScatterPlot({ data }) {
       .join("circle")
       .attr("cx", d => xScale(d.PE_Ratio))
       .attr("cy", d => yScale(d.Dividend_Yield))
-      .attr("r", 6)
+      .attr("r", 3)
       .attr("fill", "white")
       .attr("stroke", d => colorScale(d.Sector))
-      .attr("stroke-width", 3)
+      .attr("stroke-width", 1.5)
       .style("pointer-events", "all")
       .on("mouseover", function (event, d) {
-        const tooltip = d3.select(tooltipRef.current);
         tooltip
-          .style("opacity", 1)
+          .style("display", "block")
           .html(`
             <strong>${d.Company}</strong><br/>
             Sector: ${d.Sector}<br/>
@@ -58,12 +58,12 @@ export default function ScatterPlot({ data }) {
           `);
       })
       .on("mousemove", function (event) {
-        d3.select(tooltipRef.current)
-          .style("left", (event.pageX) + "px")
-          .style("top", (event.pageY - 1050) + "px");
+        tooltip
+          .style("left", (event.pageX + 10) + "px")
+          .style("top", (event.pageY + 10) + "px");
       })
       .on("mouseout", function () {
-        d3.select(tooltipRef.current).style("opacity", 0);
+        tooltip.style("display", "none");
       });
 
 
@@ -78,7 +78,7 @@ export default function ScatterPlot({ data }) {
     chart.append("text")
       .attr("class", "x-axis-label")
       .attr("x", innerWidth / 2)
-      .attr("y", innerHeight + 50)
+      .attr("y", innerHeight + 35)
       .attr("text-anchor", "middle")
       .text("P/E Ratio");
 
@@ -92,22 +92,16 @@ export default function ScatterPlot({ data }) {
       .attr("class", "y-axis-label")
       .attr("transform", "rotate(-90)")
       .attr("x", -innerHeight / 2)
-      .attr("y", -60)
+      .attr("y", -35)
       .attr("text-anchor", "middle")
       .text("Dividend Yield");
 
   }, [data]);
 
   return (
-    <div style={{ position: "relative" }}>
+    <div style={{ width: 500, margin: '0 auto' }}>
+      <h3 style={{ textAlign: 'center' }}>Valuation vs Dividend Yield by Company</h3>
       <svg ref={svgRef} className="container"></svg>
-      <div id="tooltip" ref={tooltipRef} style={{
-        position: "absolute",
-        backgroundColor: "white",
-        border: "1px solid black",
-        padding: "5px",
-        pointerEvents: "none"
-      }}></div>
     </div>
   );
 }

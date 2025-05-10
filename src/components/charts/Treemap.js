@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import createTooltip from '../../utils/createTooltip';
 import * as d3 from 'd3';
 
 const SECTOR_COLORS = {
@@ -23,21 +24,7 @@ export default function TreemapChart({ data }) {
     const width = 500;
     const height = 250;
     svg.attr('width', width).attr('height', height);
-    let tooltip = d3.select('#treemap-tooltip');
-    if (tooltip.empty()) {
-      tooltip = d3.select('body')
-        .append('div')
-        .attr('id', 'treemap-tooltip')
-        .style('position', 'absolute')
-        .style('pointer-events', 'none')
-        .style('background', 'white')
-        .style('padding', '6px 8px')
-        .style('border', '1px solid #ccc')
-        .style('border-radius', '4px')
-        .style('font-size', '12px')
-        .style('display', 'none')
-        .style('box-shadow', '0 2px 4px rgba(0,0,0,0.1)');
-    }
+    const tooltip = createTooltip('treemap-tooltip');
 
     const companyMap = d3.rollup(
       data,
@@ -96,16 +83,16 @@ export default function TreemapChart({ data }) {
 
     node.append('text')
       .attr('x', 3)
-      .attr('y', 13)
+      .attr('y', 10)
       .text(d => (d.data?.name || '').slice(0, 12))
-      .attr('font-size', '10px')
+      .attr('font-size', '8px')
       .attr('fill', 'white')
       .style('pointer-events', 'none');
   }, [data]);
 
   return (
     <div>
-      <h3>Company Size by Market Cap and Sector</h3>
+      <h3 style={{ textAlign: 'center' }}>Company Size by Market Cap and Sector</h3>
       <svg ref={svgRef}></svg>
       <div style={{ marginTop: 12 }}>
         <strong>Sector</strong>
