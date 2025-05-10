@@ -1,46 +1,35 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import * as d3 from 'd3'
-import Filters from './components/Filters';
-import LineChart from './components/LineChart';
-import StackedBarChart from './components/StackedBarChart';
-import ScatterPlot from './components/ScatterPlot';
-import TreemapChart from './components/Treemap';
+import './App.css';
+import { Filters } from './components/filters';
+import {LineChart, StackedBarChart, ScatterPlot, Treemap} from './components/charts';
+import { loadStockData } from './utils/parseStockCsv';
 
 function App() {
   const [filters, setFilters] = useState({});
   const [stockData, setStockData] = useState([]);
 
   useEffect(() => {
-    d3.csv(process.env.PUBLIC_URL + '/data/synthetic_stock_data.csv').then(raw => {
-      const parsed = raw.map(d => ({
-        ...d,
-        Date: new Date(d.Date),
-        Open: +d.Open,
-        Close: +d.Close,
-        Company: d.Company.trim(),
-        High: +d.High,
-        Low: +d.Low,
-        Sector: d.Sector,
-        'Dividend Yield': +d['Dividend Yield'],
-        'PE Ratio': +d['PE Ratio'],
-        'Market Cap': +d['Market Cap'],
-        Sentiment: d.Sentiment,
-      }));
-      setStockData(parsed);
-    });
+    loadStockData(process.env.PUBLIC_URL + '/data/synthetic_stock_data.csv')
+      .then(setStockData);
   }, []);
+
+  const availableCompanies = useMemo(() => (
+    [...new Set(stockData.map(d => d.Company))].filter(Boolean)
+  ), [stockData]);
+
+  const availableDates = useMemo(() => (
+    [...new Set(stockData.map(d =>
+      d.Date.toISOString().split('T')[0]
+    ))].sort()
+  ), [stockData]);
+
   const filteredData = useMemo(() => {
     if (
-      !filters ||
-      !filters.companies ||
-      !Array.isArray(filters.companies) ||
-      filters.companies.length === 0 ||
+      !filters.companies?.length ||
       !filters.dateStart ||
       !filters.dateEnd
-    ) {
-      return [];
-    }
-  
+    ) return [];
+
     return stockData.filter(d => {
       const date = d.Date.toISOString().split('T')[0];
       return (
@@ -50,18 +39,22 @@ function App() {
       );
     });
   }, [stockData, filters]);
-  
+
   return (
-    <div style={{ padding: 20 }}>
-      <h1>Stock Market Dashboard</h1>
-      <Filters onFilterChange={setFilters} />
+    <div className="dashboard">
+      <h2>Stock Market Dashboard</h2>
+      <Filters
+        companies={availableCompanies}
+        dates={availableDates}
+        onFilterChange={setFilters}
+      />
       {stockData.length > 0 && filters.dateStart && (
-        <>
-          <LineChart data={filteredData}/>
-          <StackedBarChart data={filteredData}/>
-          <ScatterPlot data={filteredData}/>
-          <TreemapChart data={filteredData}/>
-        </>
+        <div className="chart-grid">
+          <LineChart data={filteredData} />
+          <StackedBarChart data={filteredData} />
+          <ScatterPlot data={filteredData} />
+          <Treemap data={filteredData} />
+        </div>
       )}
     </div>
   );
